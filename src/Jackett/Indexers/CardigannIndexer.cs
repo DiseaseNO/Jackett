@@ -18,6 +18,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using AngleSharp.Dom;
 using AngleSharp.Dom.Html;
+using System.Linq;
 
 namespace Jackett.Indexers
 {
@@ -122,6 +123,8 @@ namespace Jackett.Indexers
             public selectorBlock Dateheaders { get; set; }
         }
 
+        protected readonly string[] OptionalFileds = new string[] { "imdb" };
+
         public CardigannIndexer(IIndexerManagerService i, IWebClient wc, Logger l, IProtectionService ps)
             : base(manager: i,
                    client: wc,
@@ -167,6 +170,7 @@ namespace Jackett.Indexers
             DisplayName = Definition.Name;
             DisplayDescription = Definition.Description;
             SiteLink = Definition.Links[0]; // TODO: implement alternative links
+            Encoding = Encoding.GetEncoding(Definition.Encoding);
             if (!SiteLink.EndsWith("/"))
                 SiteLink += "/";
             Language = Definition.Language;
@@ -480,7 +484,7 @@ namespace Jackett.Indexers
             return true;
         }
 
-        protected bool CheckIfLoginIsNeeded(WebClientByteResult Result, IHtmlDocument document)
+        protected bool CheckIfLoginIsNeeded(WebClientStringResult Result, IHtmlDocument document)
         {
             if (Result.IsRedirect)
             {
@@ -761,8 +765,8 @@ namespace Jackett.Indexers
             searchUrl += "&" + queryCollection.GetQueryString();
 
             // send HTTP request
-            var response = await RequestBytesWithCookies(searchUrl);
-            var results = Encoding.GetEncoding(Definition.Encoding).GetString(response.Content);
+            var response = await RequestStringWithCookies(searchUrl);
+            var results = response.Content;
             try
             {
                 var SearchResultParser = new HtmlParser();
@@ -775,8 +779,8 @@ namespace Jackett.Indexers
                     logger.Info(string.Format("CardigannIndexer ({0}): Relogin required", ID));
                     await DoLogin();
                     await TestLogin();
-                    response = await RequestBytesWithCookies(searchUrl);
-                    results = Encoding.GetEncoding(Definition.Encoding).GetString(response.Content);
+                    response = await RequestStringWithCookies(searchUrl);
+                    results = results = response.Content;
                     SearchResultDocument = SearchResultParser.Parse(results);
                 }
 
@@ -820,10 +824,11 @@ namespace Jackett.Indexers
                         // Parse fields
                         foreach (var Field in Search.Fields)
                         {
-                            string value = handleSelector(Field.Value, Row);
-                            value = ParseUtil.NormalizeSpace(value);
+                            string value = null;
                             try
                             {
+                                value = handleSelector(Field.Value, Row);
+                                value = ParseUtil.NormalizeSpace(value);
                                 switch (Field.Key)
                                 {
                                     case "download":
@@ -891,19 +896,27 @@ namespace Jackett.Indexers
                                     case "uploadvolumefactor":
                                         release.UploadVolumeFactor = ParseUtil.CoerceDouble(value);
                                         break;
+                                    case "imdb":
+                                        Regex IMDBRegEx = new Regex(@"(\d+)", RegexOptions.Compiled);
+                                        var IMDBMatch = IMDBRegEx.Match(value);
+                                        var IMDBId = IMDBMatch.Groups[1].Value;
+                                        release.Imdb = ParseUtil.CoerceLong(IMDBId);
+                                        break;
                                     default:
                                         break;
                                 }
                             }
                             catch (Exception ex)
                             {
+                                if (OptionalFileds.Contains(Field.Key))
+                                    continue;
                                 throw new Exception(string.Format("Error while parsing field={0}, selector={1}, value={2}: {3}", Field.Key, Field.Value.Selector, value, ex.Message));
                             }
                         }
 
                         // if DateHeaders is set go through the previous rows and look for the header selector
                         var DateHeaders = Definition.Search.Rows.Dateheaders;
-                        if (DateHeaders != null)
+                        if (release.PublishDate == null && DateHeaders != null)
                         {
                             var PrevRow = Row.PreviousElementSibling;
                             string value = null;

@@ -68,6 +68,8 @@ Developer note: The software implements the [Torznab](https://github.com/Sonarr/
  * SceneAccess
  * SceneFZ
  * SceneTime
+ * SDBits
+ * Secret Cinema
  * Shareisland
  * Shazbat
  * SpeedCD
@@ -149,4 +151,4 @@ All contributions are welcome just send a pull request.  Jackett's framework all
 
 ### Screenshots
 
-![screenshot](https://i.imgur.com/SCGLzFq.png "screenshot")
+![screenshot](https://i.imgur.com/0d1nl7g.png "screenshot")

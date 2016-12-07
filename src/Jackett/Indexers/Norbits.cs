@@ -52,6 +52,11 @@ namespace Jackett.Indexers
                 downloadBase: "https://norbits.net/download.php?id=",
                 configData: new ConfigurationDataNorbits())
         {
+<<<<<<< HEAD
+=======
+            Encoding = Encoding.GetEncoding("iso-8859-1");
+
+>>>>>>> refs/remotes/Jackett/master
             // Clean capabilities
             TorznabCaps.Categories.Clear();
 
@@ -110,7 +115,12 @@ namespace Jackett.Indexers
             {
                 Type = RequestType.GET,
                 Url = SiteLink,
+<<<<<<< HEAD
                 Headers = _emulatedBrowserHeaders
+=======
+                Headers = _emulatedBrowserHeaders,
+                Encoding = Encoding
+>>>>>>> refs/remotes/Jackett/master
             };
 
             // Get index page for cookies
@@ -130,7 +140,12 @@ namespace Jackett.Indexers
                 Url = LoginUrl,
                 Headers = _emulatedBrowserHeaders,
                 Cookies = indexPage.Cookies,
+<<<<<<< HEAD
                 Referer = SiteLink
+=======
+                Referer = SiteLink,
+                Encoding = Encoding
+>>>>>>> refs/remotes/Jackett/master
             };
 
             // Get login page -- (not used, but simulation needed by tracker security's checks)
@@ -147,7 +162,11 @@ namespace Jackett.Indexers
                 Url = LoginCheckUrl,
                 Headers = _emulatedBrowserHeaders,
                 Cookies = indexPage.Cookies,
+<<<<<<< HEAD
 
+=======
+                Encoding = Encoding
+>>>>>>> refs/remotes/Jackett/master
             };
 
             // Perform loggin
@@ -231,9 +250,14 @@ namespace Jackett.Indexers
             var request = BuildQuery(searchTerm, query, searchUrl);
 
             // Getting results & Store content
+<<<<<<< HEAD
             var response = await RequestBytesWithCookiesAndRetry(request, ConfigData.CookieHeader.Value);
             var results = Encoding.GetEncoding("iso-8859-1").GetString(response.Content);
             _fDom = results;
+=======
+            var response = await RequestStringWithCookiesAndRetry(request, ConfigData.CookieHeader.Value);
+            _fDom = response.Content;
+>>>>>>> refs/remotes/Jackett/master
 
             try
             {
@@ -282,6 +306,7 @@ namespace Jackett.Indexers
 
                     // Release Name
                     var name = tRow.Find("td:eq(1) > a:eq(0)").Attr("title");
+<<<<<<< HEAD
                     
                     Encoding iso_8859_1 = System.Text.Encoding.GetEncoding("iso-8859-1");
                     Encoding utf_8 = System.Text.Encoding.UTF8;
@@ -297,6 +322,8 @@ namespace Jackett.Indexers
                     string result = Encoding.UTF8.GetString(utf8Bytes);
                     
                     Output("Release: " + result);
+=======
+>>>>>>> refs/remotes/Jackett/master
 
                     // Category
                     var categoryId = tRow.Find("td:eq(0) > div > a:eq(0)").Attr("href").Split('?').Last();
@@ -393,7 +420,11 @@ namespace Jackett.Indexers
                     var release = new ReleaseInfo
                     {
                         Category = MapTrackerCatToNewznab(testcat.ToString()),
+<<<<<<< HEAD
                         Title = result,
+=======
+                        Title = name,
+>>>>>>> refs/remotes/Jackett/master
                         Seeders = seeders,
                         Peers = seeders + leechers,
                         MinimumRatio = 1,
