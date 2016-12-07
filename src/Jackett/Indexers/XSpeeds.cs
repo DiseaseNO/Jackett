@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Jackett.Models.IndexerConfig;
 using System.Text.RegularExpressions;
@@ -43,6 +44,8 @@ namespace Jackett.Indexers
                 p: ps,
                 configData: new ConfigurationDataBasicLoginWithRSSAndDisplay())
         {
+            Encoding = Encoding.GetEncoding("UTF-8");
+
             configData.DisplayText.Value = "Expect an initial delay (often around 10 seconds) due to XSpeeds CloudFlare DDoS protection";
             configData.DisplayText.Name = "Notice";
 
@@ -170,7 +173,7 @@ namespace Jackett.Indexers
             var prevCook = CookieHeader + "";
 
             // If we have no query use the RSS Page as their server is slow enough at times!
-            if (string.IsNullOrWhiteSpace(searchString))
+            if (query.IsTest || string.IsNullOrWhiteSpace(searchString))
             {
                 
                 var rssPage = await RequestStringWithCookiesAndRetry(string.Format(RSSUrl, configData.RSSKey.Value));
@@ -225,9 +228,9 @@ namespace Jackett.Indexers
                 }
                 
             }
-            else
+            if (query.IsTest || !string.IsNullOrWhiteSpace(searchString))
             {
-                if (searchString.Length < 3)
+                if (searchString.Length < 3 && !query.IsTest)
                 {
                     OnParseError("", new Exception("Minimum search length is 3"));
                     return releases;
